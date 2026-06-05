@@ -11,7 +11,8 @@ function env.import(id)
 end
 
 function env.getgitpath(where)
-    local mainBuild = "https://raw.githubusercontent.com/ricardojrgavin-afk/BrainrotPolice/refs/heads/main/"
+    -- Cleaned up by removing /refs/heads/ and leaving it right at main/
+    local mainBuild = "https://raw.githubusercontent.com/ricardojrgavin-afk/BrainrotPolice/main/"
     if where == "src" then
         return mainBuild .. "src/"
     elseif where == "games" then
@@ -26,4 +27,3 @@ game:GetService("GuiService").ErrorMessageChanged:Connect(function()
 end)
 
 loadstring(game:HttpGet(getgitpath("src").."ui.lua"))()
-
