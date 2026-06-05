@@ -7,6 +7,7 @@ local exservice = game:GetService("ExperienceService")
 local tweenservice = game:GetService("TweenService")
 
 local ui = import("rbxassetid://75281832304062")
+
 ui.Parent = hui and hui() or coregui
 
 local ToggleButton = ui.togglebtn
@@ -15,29 +16,30 @@ local MainFrame = ui.Frame
 local Topbar = MainFrame.TopBar
 local SectionContainers = MainFrame.sectionContainers
 local TabList = MainFrame.tablist
-local HideButton = Topbar.hidebtn
 
--- Keep original size parameters for smooth animations
-local originalSize = MainFrame.Size
-local originalAnchor = MainFrame.AnchorPoint
+local HideButton = Topbar.hidebtn
 
 local Sections = {
     Home = {
         TabBtn = TabList.HomeTab,
         Container = SectionContainers.homeframe
     },
+
     Game = {
         TabBtn = TabList.GameTab,
         Container = SectionContainers.gameFrame
     },
+
     GamesList = {
         TabBtn = TabList.GameslistTab,
         Container = SectionContainers.gamelistFrame
     },
+
     Settings = {
         TabBtn = TabList.SettingsTab,
         Container = SectionContainers.settingsFrame
     },
+
     Credits = {
         TabBtn = TabList.CreditsTab,
         Container = SectionContainers.creditsFrame
@@ -46,7 +48,6 @@ local Sections = {
 
 local CurSection
 
--- Safe Tab Switching Logic
 for _, sect in pairs(Sections) do
     sect.TabBtn.MouseEnter:Connect(function()
         for _, stroke in pairs(sect.TabBtn:GetChildren()) do
@@ -68,55 +69,28 @@ for _, sect in pairs(Sections) do
         if CurSection == sect then return end
 
         if CurSection then
-            local oldContainer = CurSection.Container
             CurSection.TabBtn.BackgroundTransparency = 1
-            oldContainer:TweenPosition(UDim2.new(0.5, 0, 1, 0), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.2, true, function()
-                if CurSection ~= sect then oldContainer.Visible = false end
-            end)
+            CurSection.Container:TweenPosition(UDim2.new(0.5, 0, 1, 0), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.2)
         end
 
         sect.TabBtn.BackgroundTransparency = 0
+        sect.Container:TweenPosition(UDim2.new(0.5, 0, 0, 0), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.2)
         sect.Container.Visible = true
-        sect.Container:TweenPosition(UDim2.new(0.5, 0, 0, 0), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.2, true)
 
         CurSection = sect
     end)
 end
 
--- Clean Animated Minimize and Maximize Functions
-local function minimizeMenu()
-    local shrinkInfo = TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-    local shrinkTween = tweenservice:Create(MainFrame, shrinkInfo, {
-        Size = UDim2.new(0, 0, 0, 0),
-        BackgroundTransparency = 1
-    })
-    
-    shrinkTween:Play()
-    shrinkTween.Completed:Connect(function()
-        MainFrame.Visible = false
-        ToggleButton.Visible = true
-        -- Reset sizes safely while hidden
-        MainFrame.Size = originalSize
-        MainFrame.BackgroundTransparency = 0
-    end)
-end
+HideButton.MouseButton1Click:Connect(function()
+    MainFrame.Visible = false
+    ToggleButton.Visible = true
+end)
 
-local function maximizeMenu()
-    MainFrame.Size = UDim2.new(0, 0, 0, 0)
+ToggleButton.MouseButton1Click:Connect(function()
     MainFrame.Visible = true
     ToggleButton.Visible = false
-    
-    local growInfo = TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-    local growTween = tweenservice:Create(MainFrame, growInfo, {
-        Size = originalSize
-    })
-    growTween:Play()
-end
+end)
 
-HideButton.MouseButton1Click:Connect(minimizeMenu)
-ToggleButton.MouseButton1Click:Connect(maximizeMenu)
-
--- Mobile and Desktop Optimized Dragging Logic
 local dragging = false
 local dragInput, mousePos, framePos
 
@@ -152,20 +126,18 @@ userinputservice.InputChanged:Connect(function(input)
     end
 end)
 
--- Formatting Text & Populating Data
 Sections.Home.Container.bugsLabel.Text = Sections.Home.Container.bugsLabel.Text:gsub("redacted", "discord.gg/vaehz")
 Sections.Home.Container.discan.Text = Sections.Home.Container.discan.Text:gsub("redacted", "discord.gg/vaehz")
-Sections.Home.Container.thead.Text = Sections.Home.Container.ythead.Text:gsub("redacted", "YouTube")
-Sections.Home.Container.execLabel.Text = "Executor: " .. (getexec and getexec() or "Unknown Mobile")
+Sections.Home.Container.ythead.Text = Sections.Home.Container.ythead.Text:gsub("redacted", "YouTube")
+Sections.Home.Container.execLabel.Text = "Executor: " .. getexec()
 
--- Load External Module Files and Assets
+
 local ok, gamePath = pcall(function()
     return game:HttpGet(getgitpath("games") .. tostring(game.PlaceId) .. ".lua")
 end)
 local gameList = httpservice:JSONDecode(game:HttpGet(getgitpath("src").. "gameslist.json"))
 local creditsList = httpservice:JSONDecode(game:HttpGet(getgitpath("src").. "credits.json"))
 local elements = loadstring(game:HttpGet(getgitpath("src").."elements.lua"))()
-
 if not ok or #gamePath == 0 or gamePath == "404: Not Found" then
     local handledLocally = false
 
